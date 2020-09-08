@@ -1,0 +1,50 @@
+type Post
+@auth(
+  rules: [
+    # allow all authenticated users ability to create posts
+    # allow owners ability to update and delete their posts
+    { allow: owner, provider: userPools }
+    # # allow all authenticated users to read posts
+    { allow: private, operations: [read], provider: userPools }
+    # allow all guest users (not authenticated) to read posts
+    { allow: public, operations: [read], provider: apiKey }
+  ]
+)
+# @key(fields: ["id"])
+@key(name: "listPostsByStatus", fields: ["status", "createdAt"], queryField: "listPostsByStatus")
+@model {
+  id: ID!
+  title: String!
+  description: String!
+  status: Status!
+  comments: [Comment] @connection(keyName: "byPost", fields: ["id"])
+  owner: String
+  createdAt: AWSDateTime!
+}
+
+enum Status {
+  ACTIVE
+  ARCHIVED
+}
+
+type Comment
+@auth(
+  rules: [
+    # allow all authenticated users ability to create posts
+    # allow owners ability to update and delete their posts
+    { allow: owner, provider: userPools }
+    # # allow all authenticated users to read posts
+    { allow: private, operations: [read], provider: userPools }
+    # allow all guest users (not authenticated) to read posts
+    { allow: public, operations: [read], provider: apiKey }
+  ]
+)
+@model
+@key(name: "byPost", fields: ["postId", "content"]) {
+  id: ID!
+  postId: ID!
+  post: Post @connection(fields: ["postId"])
+  content: String!
+  owner: String
+  createdAt: AWSDateTime!
+}
